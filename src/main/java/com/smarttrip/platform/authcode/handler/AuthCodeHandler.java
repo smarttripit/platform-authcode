@@ -5,7 +5,6 @@ import java.util.Random;
 
 import com.smarttrip.platform.authcode.domain.AuthCode;
 import com.smarttrip.platform.authcode.domain.AuthCodeVerifyResult;
-import com.smarttrip.platform.authcode.generator.AuthCodeGenerator;
 
 public abstract class AuthCodeHandler {
 	//验证码有效期，单位：秒。默认是5分钟。
