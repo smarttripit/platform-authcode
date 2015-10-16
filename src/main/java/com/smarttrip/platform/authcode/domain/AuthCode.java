@@ -5,6 +5,8 @@ public class AuthCode {
 	private String key;
 	//验证码
 	private String code;
+	//验证码发送时间
+	long sendTime;
 	
 	public String getKey() {
 		return key;
@@ -17,5 +19,11 @@ public class AuthCode {
 	}
 	public void setCode(String code) {
 		this.code = code;
+	}
+	public long getSendTime() {
+		return sendTime;
+	}
+	public void setSendTime(long sendTime) {
+		this.sendTime = sendTime;
 	}
 }
