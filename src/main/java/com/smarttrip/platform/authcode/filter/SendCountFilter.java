@@ -8,7 +8,7 @@ import com.smarttrip.platform.authcode.domain.AuthCodeSendResult;
 import com.smarttrip.platform.authcode.domain.AuthCodeVerifyResult;
 
 /**
- * 限制单位时间内发送次数的拦截器
+ * 限制单位时间内发送次数
  * @author songjie
  *
  */
@@ -21,12 +21,6 @@ public class SendCountFilter implements AuthCodeFilter {
 
 	@Override
 	public AuthCodeSendResult onSendBefore(String key, String code) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public AuthCodeSendResult onSendAfter(String key, String code) {
 		AuthCodeSendResult rtn = new AuthCodeSendResult();
 		rtn.setResult(AuthCodeSendResult.SUCCESS);
 		if(key == null  ||  key.equals("")){
@@ -48,6 +42,11 @@ public class SendCountFilter implements AuthCodeFilter {
 			}
 		}
 		return rtn;
+	}
+
+	@Override
+	public AuthCodeSendResult onSendAfter(String key, String code) {
+		return null;
 	}
 
 	@Override

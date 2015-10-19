@@ -36,6 +36,10 @@ public abstract class AuthCodeHandler {
 		}
 		AuthCodeVerifyResult rtn = new AuthCodeVerifyResult();
 		AuthCode authCode = getAuthCodeByKey(key);
+		if(authCode == null){
+			rtn.setResult("wrong");
+			rtn.setMsg("验证码不正确");
+		}
 		long nowTime = new Date().getTime();
 		long sendTime = authCode.getSendTime();
 		if(sendTime - nowTime  >  validPeriod){
