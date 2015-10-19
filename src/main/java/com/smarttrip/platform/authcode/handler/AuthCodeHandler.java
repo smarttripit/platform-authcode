@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Random;
 
 import com.smarttrip.platform.authcode.domain.AuthCode;
+import com.smarttrip.platform.authcode.domain.AuthCodeSendResult;
 import com.smarttrip.platform.authcode.domain.AuthCodeVerifyResult;
 
 public abstract class AuthCodeHandler {
@@ -13,8 +14,14 @@ public abstract class AuthCodeHandler {
 	/**
 	 * 发送验证码
 	 */
-	public void send(String key){
+	public AuthCodeSendResult send(String key){
+		if(key == null  ||  key.equals("")){
+			throw new IllegalArgumentException("key不能为空");
+		}
+		AuthCodeSendResult rtn = new AuthCodeSendResult();
 		String code = generateAuthCode(6);
+		
+		return rtn;
 	}
 	
 	/**
