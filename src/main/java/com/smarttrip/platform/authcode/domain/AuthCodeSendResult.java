@@ -1,6 +1,8 @@
 package com.smarttrip.platform.authcode.domain;
 
 public class AuthCodeSendResult {
+	public static String FAIL = "fail";
+	public static String SUCCESS = "success";
 	//每发送一个验证码都会产生一条消息
 	private String msgId;
 	//发送结果
