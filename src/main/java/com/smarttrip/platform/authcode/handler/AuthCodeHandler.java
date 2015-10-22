@@ -49,6 +49,8 @@ public class AuthCodeHandler {
 	 * @return
 	 */
 	public AuthCodeSendResult send(String key){
+		logger.debug("send 开始");
+		logger.debug("key:" + key);
 		if(key == null  ||  key.equals("")){
 			throw new IllegalArgumentException("key不能为空");
 		}
@@ -71,6 +73,7 @@ public class AuthCodeHandler {
 		authCode.setKey(key);
 		authCode.setSendCount(authCode.getSendCount() + 1);
 		repository.set(authCode);
+		logger.debug("send 结束");
 		return authCodeSendResult;
 	}
 	
@@ -80,6 +83,7 @@ public class AuthCodeHandler {
 	 * @return
 	 */
 	protected AuthCodeSendResult beforeSend(AuthCode authCode){
+		logger.debug("beforeSend方法 开始");
 		AuthCodeSendResult rtn = new AuthCodeSendResult();
 		if(authCode == null){
 			return rtn;
@@ -98,7 +102,9 @@ public class AuthCodeHandler {
 			rtn.setResult(AuthCodeSendResult.FAIL);
 			rtn.setTipCode("01");
 			rtn.setTipMsg("单位时间内发送次数达到上限");
+			logger.warn("单位时间内发送次数达到上限");
 		}
+		logger.debug("beforeSend方法 结束");
 		return rtn;
 	}
 	
@@ -109,6 +115,7 @@ public class AuthCodeHandler {
 	 * @return
 	 */
 	public AuthCodeVerifyResult verify(String key, String userCode){
+		logger.debug("verify方法 开始");
 		if(key == null || key.equals("") || userCode == null || userCode.equals("")){
 			throw new IllegalArgumentException("key或者code不能为空");
 		}
@@ -120,6 +127,7 @@ public class AuthCodeHandler {
 		if(authCode == null){
 			rtn.setResult(AuthCodeVerifyResult.WRONG);
 			rtn.setMsg("验证码不正确");
+			logger.debug("验证码不正确");
 			return rtn;
 		}
 		long nowTime = new Date().getTime();
@@ -127,18 +135,22 @@ public class AuthCodeHandler {
 		if(sendTime - nowTime  >  validPeriod){
 			rtn.setResult(AuthCodeVerifyResult.EXPIRED);
 			rtn.setMsg("验证码已过期");
+			logger.debug("验证码已过期");
 			return rtn;
 		}
 		if(userCode.equals(authCode.getCode())){
 			rtn.setResult(AuthCodeVerifyResult.RIGHT);
+			logger.debug("验证码正确");
 			rtn.setMsg("验证码正确");
 		}else{
 			rtn.setResult(AuthCodeVerifyResult.WRONG);
+			logger.debug("验证码不正确");
 			rtn.setMsg("验证码不正确");
 		}
 		if(rtn.getResult().equals(AuthCodeVerifyResult.RIGHT)){
 			repository.remove(authCode);
 		}
+		logger.debug("verify方法 结束");
 		return rtn;
 	}
 	
@@ -148,6 +160,7 @@ public class AuthCodeHandler {
 	 * @return
 	 */
 	protected AuthCodeVerifyResult beforeVerify(AuthCode authCode){
+		logger.debug("beforeVerify方法 开始");
 		AuthCodeVerifyResult rtn = new AuthCodeVerifyResult();
 		if(authCode == null){
 			return rtn;
@@ -157,7 +170,9 @@ public class AuthCodeHandler {
 			rtn.setResult(AuthCodeVerifyResult.WRONG);
 			rtn.setMsg("验证码验证次数超过上限");
 			repository.remove(authCode);
+			logger.debug("验证码验证次数超过上限");
 		}
+		logger.debug("beforeVerify方法 结束");
 		return rtn;
 	}
 }

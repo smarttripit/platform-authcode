@@ -8,7 +8,7 @@ public class DefaultMsgSender implements MsgSender {
 
 	@Override
 	public void sendMsg(String key, String code) {
-		logger.debug("key:" + key + ";code:" + code);
+		logger.debug("*****************key:" + key + ";code:" + code);
 		
 	}
 
