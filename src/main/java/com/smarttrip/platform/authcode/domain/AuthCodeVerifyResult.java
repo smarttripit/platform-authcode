@@ -1,6 +1,9 @@
 package com.smarttrip.platform.authcode.domain;
 
 public class AuthCodeVerifyResult {
+	public static String RIGHT = "right";
+	public static String WRONG = "wrong";
+	public static String EXPIRED = "expired";
 	//校验结果
 	private String result;
 	//提示信息
