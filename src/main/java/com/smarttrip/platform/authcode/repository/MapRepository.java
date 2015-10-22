@@ -20,7 +20,15 @@ public class MapRepository implements AuthCodeRepository {
 	}
 
 	@Override
-	public void remove(AuthCode authCode) {
-		map.remove(authCode.getKey());
+	public void remove(String key){
+		map.remove(key);
+	}
+//	public void remove(AuthCode authCode) {
+//		map.remove(authCode.getKey());
+//	}
+
+	@Override
+	public Map<String, AuthCode> getAll() {
+		return map;
 	}
 }
