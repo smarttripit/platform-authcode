@@ -50,6 +50,26 @@ public class AuthCodeHandlerTest {
 		assertEquals(sendResult.getResult(), AuthCodeSendResult.SUCCESS);
 	}
 	
+	@Test(expected = IllegalArgumentException.class)
+	public void testVerify_null_null(){
+		authCodeHandler.verify(null, null);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testVerify_null_empty(){
+		authCodeHandler.verify(null, "");
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testVerify_empty_null(){
+		authCodeHandler.verify("", null);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testVerify_empty_empty(){
+		authCodeHandler.verify("", "");
+	}
+	
 	@Test
 	public void testVerify_wrong(){
 		String key = "15210220002";
