@@ -1,6 +1,8 @@
 package com.smarttrip.platform.authcode.handler;
 
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,32 @@ public class AuthCodeHandler {
 	private MsgSender msgSender;
 	//验证码生成器
 	private CodeGenerator codeGenerator;
+	//扫描线程的时间间隔，单位：秒。默认5分钟。
+	private long threadScanPeriod = 5*60;
+	
+	private CleanUpThread cleanUpThread = new CleanUpThread("验证码repository清理线程");
+	
+	public AuthCodeHandler(){
+		this(true);//默认启动
+	}
+	
+	public AuthCodeHandler(boolean startCleanUpThread){
+		if(startCleanUpThread){
+			startCleanUpThread();
+		}
+	}
+	
+	//启动清理线程
+	private void startCleanUpThread(){
+		if(!cleanUpThread.isStarted){
+			synchronized(cleanUpThread){
+				if(!cleanUpThread.isStarted){
+					cleanUpThread.isStarted = true;
+					cleanUpThread.start();
+				}
+			}
+		}
+	}
 	
 	public void setAuthCodeRepository(AuthCodeRepository repository){
 		this.repository = repository;
@@ -41,6 +69,22 @@ public class AuthCodeHandler {
 	
 	public void setCodeGenerator(CodeGenerator codeGenerator){
 		this.codeGenerator = codeGenerator;
+	}
+	
+	public void setValidPeriod(int validPeriod) {
+		this.validPeriod = validPeriod;
+	}
+
+	public void setSendCountPeriod(int sendCountPeriod) {
+		this.sendCountPeriod = sendCountPeriod;
+	}
+
+	public void setMaxSendCount(int maxSendCount) {
+		this.maxSendCount = maxSendCount;
+	}
+
+	public void setMaxWrongVerifyCount(int maxWrongVerifyCount) {
+		this.maxWrongVerifyCount = maxWrongVerifyCount;
 	}
 	
 	/**
@@ -100,7 +144,7 @@ public class AuthCodeHandler {
 		}
 		if(sendCount >= maxSendCount){
 			rtn.setResult(AuthCodeSendResult.FAIL);
-			rtn.setTipCode("01");
+			rtn.setTipCode("threshold");
 			rtn.setTipMsg("单位时间内发送次数达到上限");
 			logger.warn("单位时间内发送次数达到上限");
 		}
@@ -132,7 +176,7 @@ public class AuthCodeHandler {
 		}
 		long nowTime = new Date().getTime();
 		long sendTime = authCode.getSendTime();
-		if(sendTime - nowTime  >  validPeriod){
+		if(nowTime - sendTime  >  validPeriod*1000){
 			rtn.setResult(AuthCodeVerifyResult.EXPIRED);
 			rtn.setMsg("验证码已过期");
 			logger.debug("验证码已过期");
@@ -148,7 +192,7 @@ public class AuthCodeHandler {
 			rtn.setMsg("验证码不正确");
 		}
 		if(rtn.getResult().equals(AuthCodeVerifyResult.RIGHT)){
-			repository.remove(authCode);
+			repository.remove(authCode.getKey());
 		}
 		logger.debug("verify方法 结束");
 		return rtn;
@@ -169,10 +213,46 @@ public class AuthCodeHandler {
 		if(wrongVerifyCount >= maxWrongVerifyCount){
 			rtn.setResult(AuthCodeVerifyResult.WRONG);
 			rtn.setMsg("验证码验证次数超过上限");
-			repository.remove(authCode);
 			logger.debug("验证码验证次数超过上限");
+			repository.remove(authCode.getKey());
 		}
 		logger.debug("beforeVerify方法 结束");
 		return rtn;
+	}
+	
+	private class CleanUpThread extends Thread{
+		private boolean isStarted = false;
+		
+		public CleanUpThread(String threadName){
+			super(threadName);
+		}
+		
+		public void run(){
+			while(true){
+				logger.debug("开始一次清理");
+				if(repository != null){
+					Map<String, AuthCode> all = repository.getAll();
+					if(all != null  &&  all.size() > 0){
+						Iterator<String> it = all.keySet().iterator();
+						while(it.hasNext()){
+							String key = it.next();
+							AuthCode authCode = all.get(key);
+							long nowTime = new Date().getTime();
+							long sendTime = authCode.getSendTime();
+							if(nowTime - sendTime >= validPeriod*1000){
+								logger.debug("清理掉一个验证码。key:" + key);
+								repository.remove(key);
+							}
+						}
+					}
+				}
+				logger.debug("结束一次清理");
+				try {
+					Thread.sleep(threadScanPeriod*1000);
+				} catch (InterruptedException e) {
+					logger.warn("清理线程被中断");
+				}
+			}
+		}
 	}
 }

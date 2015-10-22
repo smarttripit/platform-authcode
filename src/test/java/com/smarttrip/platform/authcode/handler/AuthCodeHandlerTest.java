@@ -14,7 +14,6 @@ import com.smarttrip.platform.authcode.msgsender.MsgSender;
 import com.smarttrip.platform.authcode.repository.AuthCodeRepository;
 import com.smarttrip.platform.authcode.repository.MapRepository;
 
-
 public class AuthCodeHandlerTest {
 	private AuthCodeHandler authCodeHandler;
 	private AuthCodeRepository repository;
@@ -23,7 +22,7 @@ public class AuthCodeHandlerTest {
 	
 	@Before
 	public void setUp(){
-		authCodeHandler = new AuthCodeHandler();
+		authCodeHandler = new AuthCodeHandler(true);
 		msgSender = new DefaultMsgSender();
 		codeGenerator = new DefaultCodeGenerator();
 		repository = new MapRepository();
@@ -52,13 +51,37 @@ public class AuthCodeHandlerTest {
 	}
 	
 	@Test
-	public void testVerify_right(){
+	public void testVerify_wrong(){
 		String key = "15210220002";
 		String key2 = "15210220003";
 		authCodeHandler.send(key);
 		String userCode = "123456";
 		AuthCodeVerifyResult result = authCodeHandler.verify(key2, userCode);
+		assertEquals(result.getResult(), AuthCodeVerifyResult.WRONG);
+	}
+	
+	@Test
+	public void testVerify_right(){
+		String key = "15210220004";
+		authCodeHandler.send(key);
+		String userCode = repository.get(key).getCode();
+		AuthCodeVerifyResult result = authCodeHandler.verify(key, userCode);
 		assertEquals(result.getResult(), AuthCodeVerifyResult.RIGHT);
+	}
+	
+	@Test
+	public void testVerify_expired(){
+		authCodeHandler.setValidPeriod(1);
+		String key = "15210220004";
+		authCodeHandler.send(key);
+		try {
+			Thread.sleep(1100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		String userCode = repository.get(key).getCode();
+		AuthCodeVerifyResult result = authCodeHandler.verify(key, userCode);
+		assertEquals(result.getResult(), AuthCodeVerifyResult.EXPIRED);
 	}
 	
 }
