@@ -27,7 +27,7 @@ public class AuthCodeHandler {
 	//最大验证失败次数。默认是5.
 	private int maxWrongVerifyCount = 5;
 	//存储验证码的仓库
-	private AuthCodeRepository repository;
+	private AuthCodeRepository authCodeRepository;
 	//将验证码作为一条消息发送出去
 	private MsgSender msgSender;
 	//验证码生成器
@@ -60,7 +60,7 @@ public class AuthCodeHandler {
 	}
 	
 	public void setAuthCodeRepository(AuthCodeRepository repository){
-		this.repository = repository;
+		authCodeRepository = repository;
 	}
 	
 	public void setMsgSender(MsgSender msgSender){
@@ -98,7 +98,7 @@ public class AuthCodeHandler {
 		if(key == null  ||  key.equals("")){
 			throw new IllegalArgumentException("key不能为空");
 		}
-		AuthCode authCode = repository.get(key);
+		AuthCode authCode = authCodeRepository.get(key);
 		AuthCodeSendResult authCodeSendResult = beforeSend(authCode);//发送验证码之前检查
 		if(authCodeSendResult.getResult() != null  &&  authCodeSendResult.getResult().equals(AuthCodeSendResult.FAIL)){
 			return authCodeSendResult;
@@ -116,7 +116,7 @@ public class AuthCodeHandler {
 		authCode.setSendTime(new Date().getTime());
 		authCode.setKey(key);
 		authCode.setSendCount(authCode.getSendCount() + 1);
-		repository.set(authCode);
+		authCodeRepository.set(authCode);
 		logger.debug("send 结束");
 		return authCodeSendResult;
 	}
@@ -163,7 +163,7 @@ public class AuthCodeHandler {
 		if(key == null || key.equals("") || userCode == null || userCode.equals("")){
 			throw new IllegalArgumentException("key或者code不能为空");
 		}
-		AuthCode authCode = repository.get(key);
+		AuthCode authCode = authCodeRepository.get(key);
 		AuthCodeVerifyResult rtn = beforeVerify(authCode);
 		if(rtn.getResult() != null  &&  !rtn.getResult().equals(AuthCodeVerifyResult.RIGHT)){
 			return rtn;
@@ -192,7 +192,7 @@ public class AuthCodeHandler {
 			rtn.setMsg("验证码不正确");
 		}
 		if(rtn.getResult().equals(AuthCodeVerifyResult.RIGHT)){
-			repository.remove(authCode.getKey());
+			authCodeRepository.remove(authCode.getKey());
 		}
 		logger.debug("verify方法 结束");
 		return rtn;
@@ -214,7 +214,7 @@ public class AuthCodeHandler {
 			rtn.setResult(AuthCodeVerifyResult.WRONG);
 			rtn.setMsg("验证码验证次数超过上限");
 			logger.debug("验证码验证次数超过上限");
-			repository.remove(authCode.getKey());
+			authCodeRepository.remove(authCode.getKey());
 		}
 		logger.debug("beforeVerify方法 结束");
 		return rtn;
@@ -230,8 +230,8 @@ public class AuthCodeHandler {
 		public void run(){
 			while(true){
 				logger.debug("开始一次清理");
-				if(repository != null){
-					Map<String, AuthCode> all = repository.getAll();
+				if(authCodeRepository != null){
+					Map<String, AuthCode> all = authCodeRepository.getAll();
 					if(all != null  &&  all.size() > 0){
 						Iterator<String> it = all.keySet().iterator();
 						while(it.hasNext()){
@@ -241,7 +241,7 @@ public class AuthCodeHandler {
 							long sendTime = authCode.getSendTime();
 							if(nowTime - sendTime >= validPeriod*1000){
 								logger.debug("清理掉一个验证码。key:" + key);
-								repository.remove(key);
+								authCodeRepository.remove(key);
 							}
 						}
 					}
