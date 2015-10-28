@@ -1,12 +1,12 @@
 package com.smarttrip.platform.authcode.repository;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.smarttrip.platform.authcode.domain.AuthCode;
 
 public class MapRepository implements AuthCodeRepository {
-	Map<String, AuthCode> map = new HashMap<String, AuthCode>();
+	Map<String, AuthCode> map = new ConcurrentHashMap<String, AuthCode>();
 	
 	@Override
 	public AuthCode get(String key) {
